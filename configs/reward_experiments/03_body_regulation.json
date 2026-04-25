@@ -25,10 +25,10 @@
       "height_weight": 1.0,
       "target_height": 0.28,
       "lat_yaw_weight": 0.1,
-      "use_torque": false,
-      "use_action_rate": false,
-      "use_orientation": false,
-      "use_height": false,
+      "use_torque": true,
+      "use_action_rate": true,
+      "use_orientation": true,
+      "use_height": true,
       "use_lat_yaw": false
     }
   },
@@ -38,28 +38,13 @@
   },
   "policy": {},
   "encoder": {
-    "hidden_shapes": [
-      256,
-      256
-    ],
+    "hidden_shapes": [256, 256],
     "token_dim": 64,
     "two_by_two": false
   },
   "net": {
-    "transformer_params": [
-      [
-        4,
-        128
-      ],
-      [
-        4,
-        128
-      ]
-    ],
-    "append_hidden_shapes": [
-      256,
-      256
-    ],
+    "transformer_params": [[4, 128], [4, 128]],
+    "append_hidden_shapes": [256, 256],
     "attn_res_heads": 4,
     "token_norm": true,
     "max_pool": false
@@ -71,7 +56,7 @@
   },
   "general_setting": {
     "discount": 0.99,
-    "num_epochs": 2000,
+    "num_epochs": 300,
     "batch_size": 512,
     "gae": true,
     "save_interval": 100,

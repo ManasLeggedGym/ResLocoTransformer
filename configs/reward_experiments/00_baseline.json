@@ -71,7 +71,7 @@
   },
   "general_setting": {
     "discount": 0.99,
-    "num_epochs": 2000,
+    "num_epochs": 1000,
     "batch_size": 512,
     "gae": true,
     "save_interval": 100,

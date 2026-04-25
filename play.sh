@@ -1,6 +1,7 @@
 export MUJOCO_GL=glfw
 python3 scripts/play.py \
-    --config configs/go2_attnres_mujoco.json \
-    --checkpoint 1000 \
+    --config configs/reward_experiments/01_action_rate.json \
+    --checkpoint best \
     --episodes 10 \
+    --log_dir ./sweep-logs \
     --render

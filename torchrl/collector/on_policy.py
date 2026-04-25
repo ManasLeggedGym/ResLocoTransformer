@@ -87,6 +87,8 @@ class VecOnPolicyCollector(VecCollector):
     self.vf = vf
     super().__init__(**kwargs)
     self.discount = discount
+    self._reward_term_accum = {}
+    self._reward_term_steps = 0
 
   def take_actions(self):
     ob_tensor = torch.Tensor(
@@ -109,6 +111,13 @@ class VecOnPolicyCollector(VecCollector):
 
     next_obs, rewards, terminateds, truncateds, infos = self.env.step(acts)
     dones = terminateds | truncateds
+
+    for k, v in infos.items():
+      if k.startswith(("reward/", "diag/")):
+        self._reward_term_accum[k] = (
+            self._reward_term_accum.get(k, 0.0) + float(np.mean(v))
+        )
+    self._reward_term_steps += 1
 
     if self.train_render:
       self.env.render()
@@ -155,3 +164,14 @@ class VecOnPolicyCollector(VecCollector):
     self.current_ob = next_obs
 
     return np.sum(rewards)
+
+  def train_one_epoch(self):
+    self._reward_term_accum = {}
+    self._reward_term_steps = 0
+    result = super().train_one_epoch()
+    if self._reward_term_steps > 0:
+      result["reward_terms"] = {
+          k: v / self._reward_term_steps
+          for k, v in self._reward_term_accum.items()
+      }
+    return result

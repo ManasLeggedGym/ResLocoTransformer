@@ -3,3 +3,6 @@ log/
 train_process*
 resloco_transformer.egg-info/
 .venv/
+wandb/
+sweep-logs/
+tea_debug.log

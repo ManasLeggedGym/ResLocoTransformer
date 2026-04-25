@@ -158,6 +158,7 @@ class RLAlgo():
         self.train_time = 0
         infos.update(eval_infos)
         infos.update(finish_epoch_info)
+        infos.update(training_epoch_info.get("reward_terms", {}))
 
         self.logger.add_epoch_info(
           epoch, total_frames, time.time() - self.start, infos)

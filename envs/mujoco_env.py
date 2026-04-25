@@ -34,7 +34,10 @@ import mujoco
 
 
 from mujoco import viewer
+import wandb
 
+wandb.init(project="go2-rl-base", name="base-rewards")
+    
 
 NUM_MOTORS   = 12
 STATE_DIM    = 84           # 12 (IMU×3hist) + 36 (joints×3hist) + 36 (action×3hist)
@@ -64,6 +67,7 @@ SD_JOINT_VEL = slice(12, 24)
 SD_IMU_QUAT  = slice(36, 40)   # (w, x, y, z)
 SD_IMU_GYRO  = slice(40, 43)   # (gx, gy, gz)
 SD_FRAME_VEL = slice(49, 52)   # (vx, vy, vz) in world frame
+
 
 # ---------------------------------------------------------------------------
 # Go2 home posture — matches the <key name="home"> keyframe in go2.xml
@@ -210,6 +214,7 @@ class UnitreeMujocoGymEnv(gym.Env):
         num_action_repeat: int = 10,
         sim_dt: float = 0.001,
         target_vel: float = 0.6,
+        target_angular_vel: float = 0.5,
         alive_reward: float = 0.1,
         fall_reward: float = -10.0,
         max_episode_steps: int = 1000,
@@ -218,12 +223,20 @@ class UnitreeMujocoGymEnv(gym.Env):
         # --- Phase 2 reward shaping weights ---
         vel_tracking_weight: float = 2.0,
         vel_sigma: float = 0.25,        # σ² in exp(-||Δv||²/σ²)
+        angular_vel_weight: float = 2.0,
+        angular_vel_sigma: float = 0.25,
         torque_weight: float = 0.002,
         action_rate_weight: float = 0.01,
         orientation_weight: float = 0.1,
         height_weight: float = 1.0,
         target_height: float = 0.28,    # metres — nominal Go2 CoM height
         lat_yaw_weight: float = 0.1,    # penalise lateral vel + yaw rate
+        # --- per-term enable flags (False = computed but not added to total) ---
+        use_torque: bool = True,
+        use_action_rate: bool = True,
+        use_orientation: bool = True,
+        use_height: bool = True,
+        use_lat_yaw: bool = True,
     ):
         super().__init__()
 
@@ -233,6 +246,7 @@ class UnitreeMujocoGymEnv(gym.Env):
         self.num_action_repeat = num_action_repeat
         self.sim_dt           = sim_dt
         self.target_vel       = target_vel
+        self.target_angular_vel = target_angular_vel
         self.alive_reward     = alive_reward
         self.fall_reward      = fall_reward
         self.max_episode_steps = max_episode_steps
@@ -241,12 +255,19 @@ class UnitreeMujocoGymEnv(gym.Env):
         # reward shaping
         self.vel_tracking_weight = vel_tracking_weight
         self.vel_sigma           = vel_sigma
+        self.angular_vel_weight = angular_vel_weight
+        self.angular_vel_sigma = angular_vel_sigma
         self.torque_weight       = torque_weight
         self.action_rate_weight  = action_rate_weight
         self.orientation_weight  = orientation_weight
         self.height_weight       = height_weight
         self.target_height       = target_height
         self.lat_yaw_weight      = lat_yaw_weight
+        self.use_torque          = use_torque
+        self.use_action_rate     = use_action_rate
+        self.use_orientation     = use_orientation
+        self.use_height          = use_height
+        self.use_lat_yaw         = use_lat_yaw
 
         # ------------------------------------------------------------------
         # Build MuJoCo model with the patched go2.xml (camera + abs meshdir)
@@ -452,8 +473,15 @@ class UnitreeMujocoGymEnv(gym.Env):
 
         # --- velocity tracking ---
         vx  = float(sd[SD_FRAME_VEL][0])
+        print(f"Linear Velocity: {vx}")
         dv  = (vx - self.target_vel) ** 2
         r_vel = self.vel_tracking_weight * math.exp(-dv / self.vel_sigma)
+
+        # --- angular velocity tracking ---
+        wx = float(sd[SD_IMU_GYRO][2])
+        print(f"Angular Velocity: {wx}")
+        d_angular = (wx - self.target_angular_vel) ** 2
+        r_ang_vel = self.angular_vel_weight * math.exp(-d_angular / self.angular_vel_sigma)
 
         # --- survival ---
         r_alive = self.alive_reward
@@ -461,6 +489,9 @@ class UnitreeMujocoGymEnv(gym.Env):
         # --- torque penalty ---
         torques   = self.mj_data.ctrl  # (12,) current control signals
         r_torque  = -self.torque_weight * float(np.sum(torques ** 2))
+
+
+        #! NOTE -  WE WILL BE REMOVING THE OTHER REWARD TERMS FOR NOW - AND CHECKING WITH EACH 
 
         # --- action rate penalty (requires ≥2 steps of history) ---
         if len(self._action_hist) >= 2:
@@ -486,18 +517,30 @@ class UnitreeMujocoGymEnv(gym.Env):
         yaw_rate = float(sd[SD_IMU_GYRO][2])
         r_lat_yaw = -self.lat_yaw_weight * (vy ** 2 + yaw_rate ** 2)
 
-        total = (r_vel + r_alive + r_torque + r_action_rate
-                 + r_orientation + r_height + r_lat_yaw)
+        # Base terms always active; optional terms gated by enable flags.
+        # All terms are still computed and logged regardless of the flag so
+        # we can observe what a disabled term would have contributed.
+        total = r_vel + r_alive + r_ang_vel
+        # if self.use_torque:      total += r_torque
+        # if self.use_action_rate: total += r_action_rate
+        # if self.use_orientation: total += r_orientation
+        # if self.use_height:      total += r_height
+        # if self.use_lat_yaw:     total += r_lat_yaw
+
+        active_count = (3) #+ self.use_torque + self.use_action_rate
+                        #+ self.use_orientation + self.use_height + self.use_lat_yaw)
 
         terms = {
             "reward/forward_vel":   r_vel,
             "reward/alive":         r_alive,
-            "reward/torque":        r_torque,
-            "reward/action_rate":   r_action_rate,
-            "reward/orientation":   r_orientation,
-            "reward/height":        r_height,
-            "reward/lat_yaw":       r_lat_yaw,
+            "reward/ang_vel":       r_ang_vel,
+            # "reward/torque":        r_torque,
+            # "reward/action_rate":   r_action_rate,
+            # "reward/orientation":   r_orientation,
+            # "reward/height":        r_height,
+            # "reward/lat_yaw":       r_lat_yaw,
             "reward/total":         total,
+            "reward/active_terms":  active_count,
             "diag/vx":              vx,
             "diag/base_height":     z,
             "diag/roll":            roll,
@@ -559,6 +602,7 @@ class UnitreeMujocoGymEnv(gym.Env):
             self._viewer.sync()
 
         info = {"fallen": fallen, "timeout": timeout, **reward_terms}
+        wandb.log(info)
         terminated = fallen
         truncated  = timeout
         return self._build_observation(), reward, terminated, truncated, info
