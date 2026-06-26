@@ -20,6 +20,7 @@ import os
 import sys
 import glob
 import re
+import copy
 import pickle
 import argparse
 import time
@@ -218,7 +219,6 @@ def play(args):
                 output_shape=1,
                 **params["net"],
             )
-
 
     pf.load_state_dict(torch.load(pf_path, map_location=device))
     pf.to(device)
