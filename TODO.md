@@ -1,6 +1,6 @@
 # Project TODO
 ## Ablations
-Ablations are meant to be experiments that justify each and every architectural choice so that one can conretely say why a certain choice was made. The current approach is a two stage training where we use 
+Ablations are meant to be experiments that justify each and every architectural choice so that one can conretely say why a certain choice was made. The current approach is a two stage training approach where we use the `go2_natural_gait_mlp` as the first stage and the `go2_natural_gait_mlp` config as a second stage, and we need to justify every individual component of our arch.  
 
 ### Architecture Ablations
 
