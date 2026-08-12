@@ -214,15 +214,14 @@ class VecCollector(BaseCollector):
     }
 
     self.train_rew += reward
-    if np.any(done):
-      self.train_rews += list(self.train_rew[done])
-      self.train_rew[done] = 0
 
-    if np.any(done) or \
-       np.any(self.current_step >= self.max_episode_frames):
-      # if np.any(done):
-      #     flag = done
-      flag = (self.current_step >= self.max_episode_frames) | done
+    flag = (self.current_step >= self.max_episode_frames) | done
+    if np.any(flag):
+      # Time-limit endings are episodes too -- record their return before
+      # the accumulator is reset.
+      self.train_rews += list(self.train_rew[flag])
+      self.train_rew[flag] = 0
+
       next_ob = self.env.partial_reset(np.squeeze(flag, axis=-1))
       self.current_step[flag] = 0
 

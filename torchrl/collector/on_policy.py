@@ -138,14 +138,14 @@ class VecOnPolicyCollector(VecCollector):
     }
     self.train_rew += rewards
 
-    if np.any(dones):
-      self.train_rews += list(self.train_rew[dones])
-      self.train_rew[dones] = 0
+    surpass_flag = self.current_step >= self.max_episode_frames
 
-    if np.any(dones) or \
-       np.any(self.current_step >= self.max_episode_frames):
+    if np.any(dones) or np.any(surpass_flag):
+      # Episodes ending on the time limit are real episodes too; record
+      # their return before it gets zeroed, otherwise train_rews stays
+      # empty whenever nothing terminates early.
+      self.train_rews += list(self.train_rew[dones | surpass_flag])
 
-      surpass_flag = self.current_step >= self.max_episode_frames
       last_ob = torch.Tensor(
         next_obs
       ).to(self.device)
