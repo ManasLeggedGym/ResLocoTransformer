@@ -166,7 +166,7 @@ def play(args):
     # ------------------------------------------------------------------
     params["net"]["base_type"] = networks.MLPBase
 
-    _use_mlp = args.use_mlp
+    _use_mlp = args.use_mlp or params.get("policy_type", "") == "mlp"
     obs_slice = None  # set below if checkpoint expects fewer dims than env
 
     if _use_mlp:
@@ -232,7 +232,7 @@ def play(args):
                 **params["policy"],
             )
             vf = networks.LocoTransformer(
-                encoder=encoder,
+                encoder=encoder_vf,
                 state_input_shape=env.unwrapped.state_dim,
                 visual_input_shape=(4, 64, 64),
                 output_shape=1,

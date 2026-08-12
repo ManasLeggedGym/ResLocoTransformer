@@ -18,6 +18,13 @@ import numpy as np
 SCRIPT_DIR = osp.dirname(osp.abspath(__file__))
 REPO_ROOT   = osp.dirname(SCRIPT_DIR)
 
+GAIT_COLUMNS = [
+    ("reward/foot_slip",      "slip"),
+    ("reward/foot_clearance", "clear"),
+    ("reward/feet_air_time",  "air"),
+    ("diag/base_height",      "height"),
+]
+
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -39,6 +46,13 @@ def load_series(csv_path, column):
                          if r.get(column, "").strip()])
     except Exception:
         return np.array([])
+
+
+def converged_mean(series, frac=0.1):
+    if not len(series):
+        return None
+    tail = series[-max(1, int(len(series) * frac)):]
+    return float(tail.mean())
 
 
 def convergence_epoch(series, threshold=0.95):
@@ -70,13 +84,16 @@ def main():
         m  = load_series(csv_path, args.metric)
         t  = load_series(csv_path, args.reward_term)
         ar = load_series(csv_path, "reward/action_rate")
-        rows.append({
+        row = {
             "exp_id":    exp_id,
             "final":     float(m[-1])    if len(m)  else None,
             "peak":      float(m.max())  if len(m)  else None,
             "conv":      convergence_epoch(m),
             "ar_mean":   float(ar.mean()) if len(ar) else None,
-        })
+        }
+        for col, short in GAIT_COLUMNS:
+            row[short] = converged_mean(load_series(csv_path, col))
+        rows.append(row)
         series_map[exp_id] = {"metric": m, "term": t, "action_rate": ar}
 
     # baseline first, then sort by peak desc
@@ -85,18 +102,26 @@ def main():
     baseline_peak = next((r["peak"] for r in rows if "baseline" in r["exp_id"] and r["peak"]), None)
 
     # ---- table ----
-    print(f"\n{'='*85}\n  EXPERIMENT COMPARISON   primary={args.metric}\n{'='*85}")
+    width = 85 + 9 * len(GAIT_COLUMNS)
+    print(f"\n{'='*width}\n  EXPERIMENT COMPARISON   primary={args.metric}\n{'='*width}")
     hdr = f"{'Experiment':<38} {'Final':>8} {'Peak':>8} {'vs Base':>8} {'Conv':>6} {'AR mean':>8}"
+    for _, short in GAIT_COLUMNS:
+        hdr += f" {short:>8}"
     print(hdr)
-    print("-" * 85)
+    print("-" * width)
     for r in rows:
         fs   = f"{r['final']:.4f}"  if r["final"] is not None else "n/a"
         ps   = f"{r['peak']:.4f}"   if r["peak"]  is not None else "n/a"
         conv = str(r["conv"])        if r["conv"]  is not None else "n/a"
         arm  = f"{r['ar_mean']:.4f}" if r["ar_mean"] is not None else "n/a"
         delta = (f"{r['peak']-baseline_peak:+.4f}" if baseline_peak and r["peak"] else "n/a")
-        print(f"{r['exp_id']:<38} {fs:>8} {ps:>8} {delta:>8} {conv:>6} {arm:>8}")
-    print(f"{'='*85}\n")
+        line = f"{r['exp_id']:<38} {fs:>8} {ps:>8} {delta:>8} {conv:>6} {arm:>8}"
+        for _, short in GAIT_COLUMNS:
+            line += f" {(f'{r[short]:.3f}' if r[short] is not None else 'n/a'):>8}"
+        print(line)
+    print(f"{'='*width}")
+    print("  Gait columns are converged means (last 10% of epochs); reward alone "
+          "does not decide an arm.\n")
 
     if args.no_plot:
         return
