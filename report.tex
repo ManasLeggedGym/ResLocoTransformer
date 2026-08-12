@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{tcolorbox}
 \usepackage{hyperref}
+\tcbuselibrary{breakable}
+
+\newtcolorbox{verification}{colback=green!5!white, colframe=green!40!black, title=Verification, breakable}
 
 \title{ResLocoTransformer: Project Understanding Report}
 \author{Gemini CLI Research Agent}
@@ -97,4 +100,89 @@ E001 & 2026-06-08 & Baseline Play Test & b8fc464 & N/A & \textbf{Failed (Arch In
 
 \section{Analysis of Baseline}
 Attempting to run \texttt{scripts/play.py} on the baseline checkpoint (\texttt{00\_baseline}) resulted in a architecture mismatch. The current code assumes \texttt{LocoAttnResTransformer}, while the checkpoint seems to use a different (likely standard) transformer architecture.
+
+\section{Experiment E002: Architecture Ablation (MLP vs. Visual Pool vs. AttnRes)}
+
+\paragraph{Goal}
+Decide whether visual tokens and Attention Residuals (AttnRes) are worth their
+extra compute on rough terrain, by isolating the contribution of (a) visual
+input at all and (b) attention over visual tokens vs. simple pooling.
+
+\paragraph{Hypothesis}
+Visual terrain information should help on \texttt{scene\_rough.xml} beyond
+what proprioception alone (MLP arm) provides, since the policy cannot see
+upcoming terrain changes otherwise. Whether attention over visual tokens
+(AttnRes) beats simple mean-pooling of the same tokens (Visual Pool) tests
+whether cross-token interaction is doing useful work, or whether the visual
+encoder's per-token features are already sufficient once pooled.
+
+\paragraph{Method}
+Three arms, identical in reward weights, \texttt{use\_*} flags, environment
+settings (\texttt{scene\_rough.xml}), PPO hyperparameters, and epoch budget
+(2000 epochs); only the policy architecture differs:
+\begin{itemize}
+    \item \textbf{MLP} (\texttt{configs/ablation\_mlp.json}): state-only baseline, \texttt{policy\_type: "mlp"}, \texttt{get\_image: false}. 222k policy parameters.
+    \item \textbf{Visual Pool} (\texttt{configs/ablation\_visual\_pool.json}): visual encoder produces tokens, mean-pooled (\texttt{transformer\_params: []}, \texttt{max\_pool: false}), no attention layers. 288k parameters.
+    \item \textbf{AttnRes} (\texttt{configs/ablation\_attnres.json}): same visual encoder, plus 2 \texttt{AttnResLayer} layers (\texttt{[4, 128]} each, \texttt{attn\_res\_heads: 4}). 422k parameters.
+\end{itemize}
+Each arm is run with 3 seeds (0, 1, 2) via \texttt{scripts/run\_ablations.py}
+(\texttt{--seeds 0 1 2 --vec-env-nums 8 --proc-nums 8}, reduced from the
+script's default of 16 to fit the 8GB VRAM budget of the local RTX 3070 --
+this parallelism setting is held identical across all 9 runs so it cannot
+confound the architecture comparison).
+
+\paragraph{Implementation}
+\texttt{scripts/run\_ablations.py} (new), \texttt{configs/ablation\_\{mlp,visual\_pool,attnres\}.json}.
+
+\paragraph{Results}
+\textit{Sweep in progress on the RTX 3070 (9 runs: 3 arms $\times$ 3 seeds,
+2000 epochs each). Table to be filled in on completion.}
+
+\paragraph{Analysis}
+TBD -- pending sweep completion. Per project convention, reward alone will
+not decide a winner: \texttt{reward/foot\_slip}, \texttt{reward/foot\_clearance},
+\texttt{reward/feet\_air\_time}, and \texttt{diag/base\_height} (converged,
+last 10\% of epochs) will be checked alongside reward, and the \texttt{best}
+checkpoint of each arm will be replayed with \texttt{scripts/play.py} before
+calling a winner, since reward is currently known to be an unreliable signal
+in this codebase.
+
+\paragraph{Next steps}
+Run \texttt{scripts/compare\_experiments.py --log-dir ./log\_ablation} once
+all 9 runs finish; replay best checkpoints; fill in results table and analysis
+above.
+
+\begin{verification}
+\textbf{What:} All three ablation configs build and run a forward/backward
+pass without crashing, for at least 2 epochs each.
+
+\textbf{Method:} Tier-1 smoke test -- ran each config for 2--3 epochs with
+\texttt{vec\_env\_nums=4} before launching the full sweep.
+
+\textbf{Script:} manual invocation of \texttt{scripts/train.py} with a
+temporary reduced-epoch copy of each config (not checked in).
+
+\textbf{Outcome:} pass; all three arms complete epochs without traceback.
+The tensorboardX ``NaN or Inf found in input tensor'' warning at epoch 0 is
+benign (comes from \texttt{Running\_Training\_Average\_Rewards} having no
+data yet on the very first epoch, not from the policy/value networks).
+\end{verification}
+
+\section{Experiment Summary Table (Updated)}
+\begin{table}[h!]
+\centering
+\setlength{\tabcolsep}{8pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lllrrc}
+\toprule
+ID & Date & Description & Commit & Metric & Status \\
+\midrule
+E000 & 2026-06-08 & Baseline Understanding & N/A & N/A & \textbf{Complete} \\
+E001 & 2026-06-08 & Baseline Play Test & b8fc464 & N/A & \textbf{Failed (Arch Incompatible)} \\
+E002 & 2026-08-12 & Architecture Ablation (MLP/VisualPool/AttnRes) & d490d18 & Running\_Average\_Rewards + gait diagnostics & \textbf{Running} \\
+\bottomrule
+\end{tabular}
+\caption{Summary of experiments.}
+\end{table}
+
 \end{document}
