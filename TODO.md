@@ -114,3 +114,55 @@ Things to keep in mind:
 - [ ] `log_ablation/ablation_attnres/` is an orphaned run dir from the old config
       names (no `log.csv`, never reached an eval epoch). Delete it before the
       real sweep so it is not mistaken for a result.
+
+### Audit of the seed-0 baseline run (2026-08-13, during `log_ablation/baseline.out`)
+
+Findings from auditing the live baseline run. None were acted on mid-sweep except
+the logging fix, since changing the reward or hyperparameters now would make the
+remaining arms uncomparable to the baseline already in flight.
+
+- [x] `Running_Training_Average_Rewards` logged as NaN every eval epoch.
+      `torchrl/collector/on_policy.py` only appended to `train_rews` on `dones`,
+      never on the `max_episode_frames` path. With `max_episode_frames: 999`
+      against `horizon: 1000`, episodes essentially always end by time limit, so
+      the deque stayed empty and `np.mean([])` produced the NaN that tensorboardX
+      warned about. Fixed in `on_policy.py` and the same latent bug in
+      `torchrl/collector/base.py` (`VecCollector`, off-policy path, which also
+      never reset `train_rew` on time-limit resets). Logging-only: gradients,
+      checkpoints and eval are unaffected, so the seed-0 baseline stays valid.
+- [ ] **`use_feet_gait: true` is a no-op.** `r_feet_gait` is computed
+      (`envs/mujoco_env.py:757`) and logged (`:795`) but never added to `total` --
+      every other gated term has an `if self.use_X: total += r_X` line at
+      `:762-775` and this one does not. Verified against the log at epoch 220:
+      logged total 2.02581, sum of all terms 2.78470, sum excluding feet_gait
+      2.02580. Also `_compute_feet_gait_reward` scales by `gait_phase_weight`
+      (`:615`) -- no `feet_gait_weight` exists -- and measures nearly the same
+      trot-phase agreement as `r_gait_phase`, which is why the two logged series
+      match to 3 decimals across all epochs. Decide after the sweep: either wire
+      it in with its own weight and rerun all arms, or drop the flag. Do not
+      change it mid-sweep.
+- [ ] Eval collapsed at epochs 110-130 (`Running_Average_Rewards` 1788 -> 41.8 ->
+      recovered) while training `reward/total` only dipped 1.89 -> 1.37 per step,
+      which predicts a ~1370 return. A ~30x train/eval gap. Only structural
+      difference is deterministic `pf.eval_act` vs stochastic `explore`; the obs
+      normalizer is copied correctly. Investigate if it recurs.
+- [ ] Model selection is noise-dominated. `best` is a running max over ~50 eval
+      points on a metric that swings 41 <-> 2050, which systematically favours the
+      noisiest arm. `run_ablations.py` now reports a `Tail` column (mean over the
+      final 10% of evals) and aggregates on it instead of on the last point, and
+      warns when only one seed is present. Run the sweep with >=3 seeds.
+- [ ] Both optimizers are permanently grad-clip-saturated: `clip_grad_norm_(..., 0.5)`
+      at `torchrl/algo/on_policy/ppo.py:73` and `:118`, against observed pre-clip
+      norms of 1300-2200 (vf) and ~5 (pf). `vf_loss` climbed 5 -> 250 as returns
+      grew, i.e. the critic never tracks. With `opt_epochs: 10` on a stale
+      `target_pf` this explains `ratio/max` reaching 76810 at epoch 210. Shared
+      across arms so the comparison is fair, but it caps absolute performance.
+- [ ] `diag/base_height` sits at 0.259 against `target_height: 0.29` for 220+
+      epochs and `reward/height` never improves off -0.042, despite
+      `height_weight: 30` being the largest weight in the config. Either the
+      target is unreachable in the learned gait or the height is read from a
+      different frame than the target assumes.
+- [ ] `_is_fallen` triggers only below 0.15 m CoM and `alive_reward` is 0.0, so
+      termination never fires -- `eval_traj_length` is exactly 1000.0 at every
+      eval. The ablation never exercises falling, and this is the upstream reason
+      the train-reward deque was empty.

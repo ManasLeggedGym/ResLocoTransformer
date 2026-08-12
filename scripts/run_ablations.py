@@ -161,19 +161,30 @@ def run_one(config_path, exp_id, seed, args):
     print(f"  {'DONE' if ok else 'FAILED'} in {(time.time()-t0)/60:.1f} min")
     return ok
 
+def tail_mean(series, frac=10):
+    """Mean over the final 1/frac of a series. Single eval points on this env
+    swing by more than the between-arm effect we are trying to measure, so the
+    tail mean -- not Final or Peak -- is the comparison column."""
+    if not series:
+        return None
+    tail = series[-max(1, len(series) // frac):]
+    return sum(tail) / len(tail)
+
 def arm_rows(exp_id, args, status):
-    rows, finals = [], []
+    rows, tails = [], []
     for seed in args.seeds:
         series = load_column(args.log_dir, exp_id, seed, PRIMARY_METRIC)
         final = series[-1] if series else None
         peak  = max(series) if series else None
-        if final is not None:
-            finals.append(final)
+        tail  = tail_mean(series)
+        if tail is not None:
+            tails.append(tail)
 
         label = f"{exp_id} ({arm_label(exp_id, args.configs_dir)})"
         row = (f"{label:<40} {seed:>5} "
                f"{(f'{final:.4f}' if final is not None else 'n/a'):>10} "
-               f"{(f'{peak:.4f}' if peak is not None else 'n/a'):>10}")
+               f"{(f'{peak:.4f}' if peak is not None else 'n/a'):>10} "
+               f"{(f'{tail:.4f}' if tail is not None else 'n/a'):>10}")
         for col, _ in GAIT_COLUMNS:
             s = load_column(args.log_dir, exp_id, seed, col)
             tail = s[-max(1, len(s) // 10):] if s else []
@@ -181,7 +192,7 @@ def arm_rows(exp_id, args, status):
         ok = status.get((exp_id, seed))
         row += f" {('ok' if ok else 'FAIL') if ok is not None else 'skip':>8}"
         rows.append(row)
-    return rows, finals
+    return rows, tails
 
 def summarize(status, ran, args):
     width = 120
@@ -198,7 +209,7 @@ def summarize(status, ran, args):
 
         print(f"\n{'='*width}\n  TODO: {title}\n"
               f"  primary={PRIMARY_METRIC}\n{'='*width}")
-        hdr = f"{'Arm':<40} {'Seed':>5} {'Final':>10} {'Peak':>10}"
+        hdr = f"{'Arm':<40} {'Seed':>5} {'Final':>10} {'Peak':>10} {'Tail':>10}"
         for _, short in GAIT_COLUMNS:
             hdr += f" {short:>9}"
         hdr += f" {'Status':>8}"
@@ -207,24 +218,29 @@ def summarize(status, ran, args):
 
         means = {}
         for exp_id in arms:
-            rows, finals = arm_rows(exp_id, args, status)
+            rows, tails = arm_rows(exp_id, args, status)
             for r in rows:
                 print(r)
-            if finals:
-                means[exp_id] = (sum(finals) / len(finals),
-                                 max(finals) - min(finals) if len(finals) > 1 else 0.0,
-                                 len(finals))
+            if tails:
+                means[exp_id] = (sum(tails) / len(tails),
+                                 max(tails) - min(tails) if len(tails) > 1 else 0.0,
+                                 len(tails))
 
         if means:
             print("-" * width)
             ref = means.get(BASELINE, (None,))[0]
-            print(f"{'Arm':<40} {'Seeds':>5} {'Mean final':>12} {'Spread':>10} "
+            print(f"{'Arm':<40} {'Seeds':>5} {'Mean tail':>12} {'Spread':>10} "
                   f"{'vs baseline':>13}")
             for exp_id, (mean, spread, n) in means.items():
                 delta = ("--" if ref is None or exp_id == BASELINE
                          else f"{mean - ref:+.4f}")
                 print(f"{exp_id:<40} {n:>5} {mean:>12.4f} {spread:>10.4f} "
                       f"{delta:>13}")
+            if any(n < 2 for _, _, n in means.values()):
+                print("\n  [warn] single seed per arm. Between-seed spread on this "
+                      "env is unmeasured, and eval swings by ~1000 reward between\n"
+                      "         adjacent points, so a between-arm delta below that "
+                      "is not evidence. Prefer >=3 seeds before concluding.")
 
     print(f"\n{'='*width}")
     print("\nReward is not the verdict — replay the best checkpoint of each arm before "
