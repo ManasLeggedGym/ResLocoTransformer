@@ -1,0 +1,824 @@
+/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/gymnasium/spaces/box.py:236: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/gymnasium/spaces/box.py:306: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+2026-08-11 18:36:58,186 MainThread INFO: Experiment Name:go2_natural_gait_tf
+2026-08-11 18:36:58,186 MainThread INFO: {
+  "env_name": "UnitreeMujocoGymEnv",
+  "env": {
+    "reward_scale": 1,
+    "obs_norm": true,
+    "horizon": 1000,
+    "env_build": {
+      "scene_path": "robot/go2/scene_flat.xml",
+      "get_image": true,
+      "Kp": 40.0,
+      "Kd": 0.5,
+      "num_action_repeat": 10,
+      "sim_dt": 0.001,
+      "target_vel": 0.3,
+      "alive_reward": 0.0,
+      "fall_reward": -5.0,
+      "max_episode_steps": 1000,
+      "depth_norm": true,
+      "enable_rendering": false,
+      "target_angular_vel": 0.0,
+      "vel_tracking_weight": 5.0,
+      "vel_sigma": 0.25,
+      "angular_vel_weight": 0.2,
+      "angular_vel_sigma": 0.25,
+      "torque_weight": 0.0005,
+      "action_rate_weight": 0.001,
+      "orientation_weight": 2.0,
+      "height_weight": 30.0,
+      "target_height": 0.29,
+      "lat_yaw_weight": 0.3,
+      "z_vel_weight": 0.5,
+      "ang_vel_xy_weight": 0.1,
+      "feet_air_time_weight": 2.0,
+      "feet_air_time_target": 0.1,
+      "foot_slip_weight": 0.5,
+      "foot_clearance_weight": 1.0,
+      "foot_clearance_target": 0.04,
+      "pitch_rate_weight": 0.5,
+      "flat_orientation_weight": 0.5,
+      "gait_freq": 2.0,
+      "gait_duty_factor": 0.5,
+      "gait_phase_weight": 1.5,
+      "symmetry_weight": 0.2,
+      "use_torque": true,
+      "use_action_rate": true,
+      "use_orientation": true,
+      "use_height": true,
+      "use_lat_yaw": true,
+      "use_z_vel": true,
+      "use_ang_vel_xy": true,
+      "use_feet_air_time": true,
+      "use_foot_slip": true,
+      "use_foot_clearance": true,
+      "use_pitch_rate": true,
+      "use_flat_orientation": true,
+      "use_gait_phase": true,
+      "use_symmetry": true,
+      "use_feet_gait": true
+    }
+  },
+  "replay_buffer": {
+    "size": 16384,
+    "time_limit_filter": true
+  },
+  "policy": {},
+  "encoder": {
+    "hidden_shapes": [
+      256,
+      256
+    ],
+    "token_dim": 64,
+    "two_by_two": false
+  },
+  "net": {
+    "transformer_params": [
+      [
+        4,
+        128
+      ],
+      [
+        4,
+        128
+      ]
+    ],
+    "append_hidden_shapes": [
+      256,
+      256
+    ],
+    "attn_res_heads": 4,
+    "token_norm": true,
+    "max_pool": false
+  },
+  "collector": {
+    "epoch_frames": 16384,
+    "max_episode_frames": 999,
+    "eval_episodes": 1
+  },
+  "general_setting": {
+    "discount": 0.99,
+    "num_epochs": 2000,
+    "batch_size": 4096,
+    "gae": true,
+    "save_interval": 100,
+    "eval_interval": 10
+  },
+  "ppo": {
+    "plr": 0.0003,
+    "vlr": 0.0003,
+    "clip_para": 0.2,
+    "opt_epochs": 10,
+    "tau": 0.95,
+    "shuffle": true,
+    "entropy_coeff": 0.005
+  }
+}
+GaussianContPolicyLocoAttnResTransformer(
+  (encoder): LocoTransformerEncoder(
+    (depth_visual_base): NatureEncoder(
+      (layers): Sequential(
+        (0): Conv2d(4, 32, kernel_size=(8, 8), stride=(4, 4))
+        (1): ReLU()
+        (2): Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
+        (3): ReLU()
+        (4): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+        (5): ReLU()
+      )
+    )
+    (depth_up_conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+    (base): MLPBase(
+      (seq_fcs): Sequential(
+        (0): Linear(in_features=86, out_features=256, bias=True)
+        (1): ReLU()
+        (2): Linear(in_features=256, out_features=256, bias=True)
+        (3): ReLU()
+      )
+    )
+    (state_projector): RLProjection(
+      (projection): Sequential(
+        (0): Linear(in_features=256, out_features=64, bias=True)
+        (1): ReLU()
+      )
+    )
+    (flatten_layer): Flatten()
+  )
+  (token_ln): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (attn_res_layers): ModuleList(
+    (0-1): 2 x ModuleList(
+      (0): SelfAttentionSubLayer(
+        (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+        (attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=64, out_features=64, bias=True)
+        )
+      )
+      (1): FFNSubLayer(
+        (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+        (linear1): Linear(in_features=64, out_features=128, bias=True)
+        (linear2): Linear(in_features=128, out_features=64, bias=True)
+        (activation): ReLU()
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+      (2-3): 2 x AttnResLayer(
+        (q_proj): Linear(in_features=64, out_features=64, bias=True)
+        (k_proj): Linear(in_features=64, out_features=64, bias=True)
+        (v_proj): Linear(in_features=64, out_features=64, bias=True)
+        (out_proj): Linear(in_features=64, out_features=64, bias=True)
+      )
+    )
+  )
+  (visual_seq_append_fcs): Sequential(
+    (0): Linear(in_features=128, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=256, out_features=256, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=256, out_features=12, bias=True)
+  )
+)
+LocoAttnResTransformer(
+  (encoder): LocoTransformerEncoder(
+    (depth_visual_base): NatureEncoder(
+      (layers): Sequential(
+        (0): Conv2d(4, 32, kernel_size=(8, 8), stride=(4, 4))
+        (1): ReLU()
+        (2): Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
+        (3): ReLU()
+        (4): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+        (5): ReLU()
+      )
+    )
+    (depth_up_conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+    (base): MLPBase(
+      (seq_fcs): Sequential(
+        (0): Linear(in_features=86, out_features=256, bias=True)
+        (1): ReLU()
+        (2): Linear(in_features=256, out_features=256, bias=True)
+        (3): ReLU()
+      )
+    )
+    (state_projector): RLProjection(
+      (projection): Sequential(
+        (0): Linear(in_features=256, out_features=64, bias=True)
+        (1): ReLU()
+      )
+    )
+    (flatten_layer): Flatten()
+  )
+  (token_ln): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+  (attn_res_layers): ModuleList(
+    (0-1): 2 x ModuleList(
+      (0): SelfAttentionSubLayer(
+        (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+        (attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=64, out_features=64, bias=True)
+        )
+      )
+      (1): FFNSubLayer(
+        (norm): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+        (linear1): Linear(in_features=64, out_features=128, bias=True)
+        (linear2): Linear(in_features=128, out_features=64, bias=True)
+        (activation): ReLU()
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+      (2-3): 2 x AttnResLayer(
+        (q_proj): Linear(in_features=64, out_features=64, bias=True)
+        (k_proj): Linear(in_features=64, out_features=64, bias=True)
+        (v_proj): Linear(in_features=64, out_features=64, bias=True)
+        (out_proj): Linear(in_features=64, out_features=64, bias=True)
+      )
+    )
+  )
+  (visual_seq_append_fcs): Sequential(
+    (0): Linear(in_features=128, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=256, out_features=256, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=256, out_features=1, bias=True)
+  )
+)
+Traceback (most recent call last):
+  File "/home/manas/Research/ResLocoTransformer/scripts/train.py", line 280, in <module>
+    experiment(args)
+  File "/home/manas/Research/ResLocoTransformer/scripts/train.py", line 195, in experiment
+    params["general_setting"]["collector"] = VecOnPolicyCollector(
+                                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/manas/Research/ResLocoTransformer/scripts/../torchrl/collector/on_policy.py", line 88, in __init__
+    super().__init__(**kwargs)
+  File "/home/manas/Research/ResLocoTransformer/scripts/../torchrl/collector/base.py", line 179, in __init__
+    super(VecCollector, self).__init__(**kwargs)
+  File "/home/manas/Research/ResLocoTransformer/scripts/../torchrl/collector/base.py", line 45, in __init__
+    self.to(self.device)
+  File "/home/manas/Research/ResLocoTransformer/scripts/../torchrl/collector/base.py", line 168, in to
+    self.funcs[func].to(device)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1384, in to
+    return self._apply(convert)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 934, in _apply
+    module._apply(fn)
+  [Previous line repeated 1 more time]
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 965, in _apply
+    param_applied = fn(param)
+                    ^^^^^^^^^
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1370, in convert
+    return t.to(
+           ^^^^^
+torch.AcceleratorError: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Exception ignored in atexit callback: <function FileWriter.__init__.<locals>.cleanup at 0x713bb212ef20>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/tensorboardX/writer.py", line 122, in cleanup
+    self.event_writer.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/tensorboardX/event_file_writer.py", line 154, in close
+    self._worker.stop()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/tensorboardX/event_file_writer.py", line 185, in stop
+    self._queue.put(self._shutdown_signal)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/multiprocessing/queues.py", line 94, in put
+    self._start_thread()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/multiprocessing/queues.py", line 177, in _start_thread
+    self._thread.start()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/threading.py", line 971, in start
+    _start_new_thread(self._bootstrap, ())
+RuntimeError: can't create new thread at interpreter shutdown
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/platform/baseplatform.py", line 487, in __call__
+    return self(*args, **named)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+    self.close()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+    self._gl_context.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function Renderer.__del__ at 0x713e3a3bba60>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 339, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py", line 325, in close
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x713e3a3bb380>
+Traceback (most recent call last):
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 133, in free
+  File "/home/manas/miniforge3/envs/resloco/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>

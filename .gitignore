@@ -27,4 +27,4 @@ dist/
 # Misc
 .pytest_cache/
 .mypy_cache/
-.ruff_cache/
+.ruff_cache/.rag_db/

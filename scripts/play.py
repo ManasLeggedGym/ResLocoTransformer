@@ -157,15 +157,34 @@ def play(args):
     env.eval()
 
     # ------------------------------------------------------------------
+    # Peek at checkpoint to detect expected input dimension
+    # ------------------------------------------------------------------
+    ckpt_sd = torch.load(pf_path, map_location=device)
+
+    # ------------------------------------------------------------------
     # Build policy network
     # ------------------------------------------------------------------
     params["net"]["base_type"] = networks.MLPBase
 
     _use_mlp = args.use_mlp
+    obs_slice = None  # set below if checkpoint expects fewer dims than env
 
     if _use_mlp:
         # Simple MLP policy — no encoder, no transformer, state-only
-        obs_dim = env.unwrapped.observation_space.shape[0]
+        env_obs_dim = env.unwrapped.observation_space.shape[0]
+
+        # Detect checkpoint input dim from first linear layer
+        ckpt_obs_dim = env_obs_dim
+        if "base.seq_fcs.0.weight" in ckpt_sd:
+            ckpt_obs_dim = ckpt_sd["base.seq_fcs.0.weight"].shape[1]
+
+        if ckpt_obs_dim != env_obs_dim:
+            print(f"  NOTE: checkpoint expects {ckpt_obs_dim}-dim input, "
+                  f"env provides {env_obs_dim}-dim. "
+                  f"Will slice observations to first {ckpt_obs_dim} dims.")
+            obs_slice = slice(0, ckpt_obs_dim)
+
+        obs_dim = ckpt_obs_dim
         pf = policies.GaussianContPolicyBasicBias(
             input_shape=obs_dim,
             output_shape=env.action_space.shape[0],
@@ -220,7 +239,7 @@ def play(args):
                 **params["net"],
             )
 
-    pf.load_state_dict(torch.load(pf_path, map_location=device))
+    pf.load_state_dict(ckpt_sd)
     pf.to(device)
     pf.eval()
     print(f"Loaded policy ({pf.__class__.__name__})")
@@ -247,7 +266,8 @@ def play(args):
         while not done:
             step_start = time.monotonic()
 
-            ob_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(device)
+            ob = obs[obs_slice] if obs_slice is not None else obs
+            ob_tensor = torch.tensor(ob, dtype=torch.float32).unsqueeze(0).to(device)
             with torch.no_grad():
                 out = pf.explore(ob_tensor)
                 act = out["action"].squeeze(0).cpu().numpy()
