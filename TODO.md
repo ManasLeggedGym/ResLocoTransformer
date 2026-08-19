@@ -4,13 +4,47 @@ Ablations are meant to be experiments that justify each and every architectural 
 
 ### Architecture Ablations
 
-The arms map 1:1 onto the three Experiments bullets in `main`'s `TODO.md`, and
+**Six arms, three seeds each (0, 1, 2) — 18 arm-seeds.** Every arm uses the same
+seed set, the same `--vec_env_nums 16 --proc_nums 16`, and the same 500 epochs.
+
+| arm | what it is | source |
+|---|---|---|
+| `ablation_baseline` | AttnRes, 2x `[4, 128]`, `attn_res_heads: 4` | `main`: **AttnRes** |
+| `ablation_visual_pool` | visual encoder, tokens averaged, no attention layers | `main`: **Visual pool** |
+| `ablation_stateonly` | state-only, no visual terrain features | `main`: **MLP** |
+| `ablation_heads1` | `attn_res_heads: 1` | head-count sweep |
+| `ablation_heads2` | `attn_res_heads: 2` | head-count sweep |
+| `ablation_heads8` | `attn_res_heads: 8` | head-count sweep |
+
+The first three are the architecture comparison `main`'s `TODO.md` asks for
+(live: `origin/main` @ `7a4304d`, "Revise ablation section in TODO.md" — the
+*local* `main` ref is 5 commits stale and still shows the older layout). The
+head-count sweep comes from the previous revision of that TODO ("Experiment with
+different `attn_res_heads`") and stays in the matrix: it justifies the head count
+the AttnRes arm would otherwise pick arbitrarily.
+
 `scripts/run_ablations.py` prints one summary section per bullet.
+
+#### Matrix status (2026-08-19)
+
+13 / 18 arm-seeds complete at 500 epochs (50 eval rows). Remaining, in order:
+
+| arm-seed | state |
+|---|---|
+| `heads1` seed 2 | running (18/50 eval rows), `run_remaining_seeds.sh` |
+| `heads2` seed 2 | queued in `run_remaining_seeds.sh` |
+| `heads8` seed 2 | queued in `run_remaining_seeds.sh` |
+| `visual_pool` seeds 0, 1, 2 | not started — `./run_visualpool_seeds.sh` |
+
+`visual_pool` is the only arm with no seeds yet; the other five are complete or
+in flight. ~10 h per arm-seed, so ~50 h of GPU left. Arms cannot overlap (one arm
+at `--vec_env_nums 16` takes ~6.3 of 7.64 GB usable on the 3070), so start
+`run_visualpool_seeds.sh` only after `run_remaining_seeds.sh` reports finished.
 
 **Bullet 1 — "Run a baseline training session (Tier 2/3)"**
 
 - [x] `configs/ablation_baseline.json` — AttnRes, 2x `[4, 128]` layers,
-      `attn_res_heads: 4`, depth camera on. Reference arm for both other bullets.
+      `attn_res_heads: 4`, depth camera on. Reference arm for every other bullet.
 
 **Bullet 2 — "Experiment with different `attn_res_heads` in `LocoAttnResTransformer`"**
 
@@ -32,6 +66,54 @@ The arms map 1:1 onto the three Experiments bullets in `main`'s `TODO.md`, and
       the encoder and transformer with it. The gap therefore measures
       "vision + attention stack" vs "state-only MLP", not the camera in isolation.
       Isolating the camera would need a state-only transformer path in `train.py`.
+
+**Bullet 4 — `main`'s "Visual pool" arm: visual encoder, tokens averaged, no
+attention layers**
+
+Straight from `origin/main`'s `TODO.md:10`. This branch's `report.tex` E002
+("MLP vs. Visual Pool vs. AttnRes") already specifies the same arm, and `main`'s
+`report.tex:70` describes the same reduction inside `LocoTransformer`.
+
+- [ ] `configs/ablation_visual_pool.json` — `transformer_params: []` and no
+      `attn_res_heads`, so `train.py` builds `GaussianContPolicyLocoTransformer`
+      with zero layers: encoder tokens are mean-pooled and concatenated with the
+      state token, no attention at all. 288,312 policy parameters (matches the
+      288k in `report.tex` E002) vs 422k for the baseline.
+- The arm `main` asks for and the one E002 already specifies; the file existed as
+      `configs/ablation_visual_pool.json`, was renamed to `extra_visual_pool.json`
+      in `2eedb0b` — which dropped it out of `run_ablations.py`'s `ablation_*.json`
+      glob — and is now renamed back. Its contents are unchanged and differ from
+      `ablation_baseline.json` on exactly `net.transformer_params` and
+      `net.attn_res_heads`.
+- Why it is worth a slot: `ablation_stateonly` compares vision+attention against
+      a state-only MLP and so cannot say which half paid off. `visual_pool` keeps
+      the camera and the encoder and removes only the attention stack, so
+      `baseline - visual_pool` isolates the AttnRes layers and
+      `visual_pool - stateonly` isolates the camera.
+- `scripts/play.py:207` selects the non-AttnRes path from the absence of
+      `attn_res_heads`, so `./play_ablation.sh visual_pool` replays it with no
+      extra flag.
+- Not yet run — `./run_visualpool_seeds.sh` queues seeds 0/1/2. It must start
+      only after `run_remaining_seeds.sh` finishes; two concurrent arms at
+      `--vec_env_nums 16` OOM the 8 GB RTX 3070.
+- Open: mean vs. max reduction (`net.max_pool`) is a separate untested choice.
+      Both arms above use `max_pool: false`. Not currently scheduled.
+
+#### `main`'s "Things to keep in mind"
+
+- [x] *Logging should prevent loss of progress.* Each arm-seed writes
+      `log_ablation/<arm>/UnitreeMujocoGymEnv/<seed>/log.csv` incrementally;
+      `run_ablations.py` reads finished and partial runs alike, so a crashed arm
+      still contributes its epochs.
+- [x] *Checkpoints at regular intervals.* `save_interval: 50`,
+      `eval_interval: 10` in every ablation config, plus a `best` checkpoint.
+      `train.py --resume` restarts from the latest one.
+- [x] *Do not be fooled by high reward alone.* `run_ablations.py` prints
+      `reward/foot_slip`, `reward/foot_clearance`, `reward/feet_air_time` and
+      `diag/base_height` next to reward, compares on a tail mean rather than a
+      single eval point, and ends by telling you to replay the `best` checkpoint
+      (`play_ablation.sh`) before calling a winner. Replay is still a manual step
+      — not yet done for any arm.
 
 #### Can an existing checkpoint serve as the fixed baseline? — No.
 
@@ -78,13 +160,15 @@ non-zero if an arm differs from the baseline on any key outside its whitelist.
   still too much for two, and 2.9x slower per epoch (208 s vs 72 s), so 16 is
   strictly better given arms cannot overlap anyway.
 - **Budget.** 72 s/epoch x 500 epochs = ~10 h per arm-seed. The full matrix
-  (5 arms x 3 seeds) is ~150 h ≈ 6.3 days of wall clock. Decide before launching
-  the rest: fewer seeds, fewer epochs, or a bigger box.
+  (6 arms x 3 seeds, `ablation_visual_pool` included) is ~180 h ≈ 7.5 days of
+  wall clock. Decide before launching the rest: fewer seeds, fewer epochs, or a
+  bigger box.
 
 Run them with:
 
 ```
-python3 scripts/run_ablations.py --seeds 0 1 2   # 5 arms x 3 seeds, grouped summary
+python3 scripts/run_ablations.py --seeds 0 1 2   # 6 arms x 3 seeds, grouped summary
+python3 scripts/run_ablations.py --filter visual_pool --seeds 0 1 2  # bullet 4 only
 python3 scripts/run_ablations.py --filter heads  # bullet 2 only
 ```
 

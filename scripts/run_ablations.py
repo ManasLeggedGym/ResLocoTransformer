@@ -28,12 +28,15 @@ TODO_GROUPS = [
      ["ablation_heads1", "ablation_heads2", BASELINE, "ablation_heads8"]),
     ("Effect of the depth camera (state-only policy)",
      [BASELINE, "ablation_stateonly"]),
+    ("Attention over visual tokens vs. simple pooling",
+     ["ablation_visual_pool", BASELINE]),
 ]
 
 ALLOWED_DIFFS = {
     "ablation_heads1":   {"net.attn_res_heads"},
     "ablation_heads2":   {"net.attn_res_heads"},
     "ablation_heads8":   {"net.attn_res_heads"},
+    "ablation_visual_pool": {"net.transformer_params", "net.attn_res_heads"},
     "ablation_stateonly": {
         "env.env_build.get_image", "policy_type",
         "net.attn_res_heads", "net.transformer_params",
@@ -122,7 +125,11 @@ def arm_label(exp_id, configs_dir):
         cfg = json.load(f)
     if cfg.get("policy_type") == "mlp":
         return "mlp, no camera"
-    heads = cfg.get("net", {}).get("attn_res_heads")
+    net = cfg.get("net", {})
+    if not net.get("transformer_params", []):
+        pool = "max" if net.get("max_pool", False) else "mean"
+        return f"{pool}-pool only, no attention"
+    heads = net.get("attn_res_heads")
     return f"heads={heads}" if heads is not None else ""
 
 def load_column(log_dir, exp_id, seed, column):
