@@ -25,21 +25,31 @@ the AttnRes arm would otherwise pick arbitrarily.
 
 `scripts/run_ablations.py` prints one summary section per bullet.
 
-#### Matrix status (2026-08-19)
+#### Matrix status (2026-08-22)
 
-13 / 18 arm-seeds complete at 500 epochs (50 eval rows). Remaining, in order:
+15 / 18 arm-seeds complete at 500 epochs (50 eval rows). `run_remaining_seeds.sh`
+reported `ALL RUNS FINISHED after 42 h at 2026-08-20 11:39:31`; all five
+non-`visual_pool` arms are done across seeds 0, 1, 2. (`stateonly` seed 0 has 52
+rows rather than 50 — a resume artifact, two duplicated eval rows near the resume
+point; de-duplicate on EPOCH when aggregating.)
 
 | arm-seed | state |
 |---|---|
-| `heads1` seed 2 | running (18/50 eval rows), `run_remaining_seeds.sh` |
-| `heads2` seed 2 | queued in `run_remaining_seeds.sh` |
-| `heads8` seed 2 | queued in `run_remaining_seeds.sh` |
-| `visual_pool` seeds 0, 1, 2 | not started — `./run_visualpool_seeds.sh` |
+| `baseline`, `stateonly`, `heads1`, `heads2`, `heads8` seeds 0,1,2 | complete (50 eval rows each) |
+| `visual_pool` seed 0 | running since 2026-08-22 17:44, `run_visualpool_seeds.sh` |
+| `visual_pool` seeds 1, 2 | queued in `run_visualpool_seeds.sh` |
 
-`visual_pool` is the only arm with no seeds yet; the other five are complete or
-in flight. ~10 h per arm-seed, so ~50 h of GPU left. Arms cannot overlap (one arm
-at `--vec_env_nums 16` takes ~6.3 of 7.64 GB usable on the 3070), so start
-`run_visualpool_seeds.sh` only after `run_remaining_seeds.sh` reports finished.
+`visual_pool` is the last arm. Launched 2026-08-22 17:44 after confirming the GPU
+was idle; ~55 s/epoch at 500 epochs is ~7.5 h per seed, so ~23 h for all three
+(faster than the ~10 h/seed of the AttnRes arms, as expected with no attention
+layers). Watch with `tail -f log_ablation/visualpool.out`; stop with
+`kill -- -$(cat log_ablation/visualpool.pgid)`.
+
+Tier-1 check before launch: the arm was smoke-tested for 2 epochs on a throwaway
+short config in scratch (rc=0), and the printed policy confirms
+`visual_append_layers` is an empty `ModuleList` while `depth_visual_base` /
+`depth_up_conv` remain — i.e. visual tokens present, attention over them removed,
+which is the single variable this arm isolates against `ablation_baseline`.
 
 **Bullet 1 — "Run a baseline training session (Tier 2/3)"**
 
